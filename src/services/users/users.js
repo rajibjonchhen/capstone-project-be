@@ -1,5 +1,5 @@
 import express from "express";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 import multer from "multer";
 import { JWTAuthMW } from "../authentication/JWTAuthMW.js";
 import { authenticateUser } from "../authentication/tools.js";
@@ -33,7 +33,7 @@ const usersRouter = express.Router()
             res.send({user})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -45,7 +45,7 @@ const usersRouter = express.Router()
             res.send({user : updatedUser})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -57,7 +57,7 @@ const usersRouter = express.Router()
             res.send({user : updatedUser})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -74,10 +74,10 @@ const usersRouter = express.Router()
             res.send({_id})
         } else {
 
-            next(createError(401, {error:"bad request missing field could not create user"}))
+            next(createError(401, {message:"bad request missing field could not create user"}))
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -92,10 +92,10 @@ const usersRouter = express.Router()
             const token  =  await authenticateUser(user)
             res.send({user, token})
         } else {
-            next(createHttpError(401, "Invalid email or password"))
+            next(createError(401, {message:"Invalid email or password"}))
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -106,7 +106,7 @@ const usersRouter = express.Router()
             const users = await UserModel.find()
             res.send({users})
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -119,7 +119,7 @@ const usersRouter = express.Router()
             res.send({user})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -132,7 +132,7 @@ const usersRouter = express.Router()
             res.send({user})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -145,7 +145,7 @@ const usersRouter = express.Router()
             res.send()
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -158,7 +158,7 @@ const usersRouter = express.Router()
             
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -168,7 +168,7 @@ const usersRouter = express.Router()
     try {
         res.send({token : null})
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 

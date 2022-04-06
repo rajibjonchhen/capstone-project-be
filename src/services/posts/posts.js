@@ -5,6 +5,7 @@ import createError from "http-errors";
 import { JWTAuthMW } from "../authentication/JWTAuthMW.js";
 import { authenticateUser } from "../authentication/tools.js";
 import PostModel from "./post-schema.js"
+import CommentModel from "../comments/comment-schema.js"
 import { adminMW } from "../authentication/adminMW.js";
 
 
@@ -19,7 +20,7 @@ const postsRouter = express.Router()
     try {
         if(req.user.role==="admin"){
             console.log("admin search only")
-            const post = await PostModel.findById(req.params.postId)
+            const post = await PostModel.findById(req.params.postId).populate({path: "postedBy", select:"name surname"})
             res.send({post})
         }
     } catch (error) {
@@ -64,7 +65,7 @@ const postsRouter = express.Router()
             res.send({_id})
         } else {
 
-            next(createError(401, "bad request missing field could not create Post"))
+            next(createError(400, "bad request missing field could not create Post"))
         }
     } catch (error) {
         next(createError(error))
@@ -75,7 +76,7 @@ const postsRouter = express.Router()
 /*****************************  get all Posts *************************/
 .get("/", JWTAuthMW, async(req, res, next) => {
     try {
-            const posts = await PostModel.find()
+            const posts = await PostModel.find().populate({path: "comments.commentedBy", select:"name surname"})
             res.send({posts})
     } catch (error) {
         next(createError(error))
@@ -161,32 +162,24 @@ const postsRouter = express.Router()
 /***************************  comment a post ************************/
 .post("/:postId/comments",JWTAuthMW, async(req, res, next) => {
     try {
-        const reqPost = await PostModel.findById(req.params.postId)
-        if(reqPost){
-                const newComment = {...req.body, commentedBy: req.user._id}
-                const updatedPost = await PostModel.findByIdAndUpdate(req.params.postId,{$push:{comments: newComment}}, {new:true})
-            if(updatedPost){
-
-                res.send({updatedPost})
-            } else {
-                next(createError(401, " error - could not post a comment"))
-            }
-        } else {
-            next(createError(404, "bad request could not find the required post"))
-        }
-    } catch (error) {
+        const postId = req.params.postId
+        // const reqPost = await CommentModel.findById(postId)
+        const newComment = new CommentModel({ ...req.body, post: postId, commentedBy:req.user._id })
+        const { _id } = await newComment.save()
+        res.status(201).send({ _id })
+      } catch (error) {
         next(createError(error))
-    }
-})
+      }
+    })
 
 /***************************  get all the comments of a post ************************/
 .get("/:postId/comments",JWTAuthMW, async(req, res, next) => {
     try {
-        const reqPost = await PostModel.findById(req.params.postId)
+        const reqPost = await CommentModel.find({post:req.params.postId}).populate({path:"post", select:"_id content"})
         if(reqPost){
-                res.send({comments:reqPost.comments})
+                res.send({comments:reqPost})
         } else {
-            next(createError(404, "bad request could not find the required post"))
+            next(createError(404, {message:"bad request could not find the required post"}))
         }
     } catch (error) {
         next(createError(error))
@@ -196,20 +189,97 @@ const postsRouter = express.Router()
 /***************************  get a comment with commentId ************************/
 .get("/:postId/comments/:commentId",JWTAuthMW, async(req, res, next) => {
     try {
-        const reqPost = await PostModel.findById(req.params.postId)
+        const reqPost = await CommentModel.findById(req.params.commentId).populate({path:"post", select:"_id content"})
         if(reqPost){
-            const reqComment = reqPost.comments.find(comment => comment._id.toString() === req.params.commentId)
-            if(reqComment){
-                res.send({comment:reqComment})
-            }  else {
-
-                next(createError(404, " could not find the required comment"))
-            } 
+                res.send({comments:reqPost})
         } else {
-            next(createError(404, "bad request could not find the required post"))
+            next(createError(404, {message:"bad request could not find the required comment"}))
         }
     } catch (error) {
         next(createError(error))
     }
 })
+
+/***************************  edit a comment with commentId ************************/
+.put("/:postId/comments/:commentId",JWTAuthMW, async(req, res, next) => {
+    try {
+        const reqComment = await CommentModel.findById(req.params.commentId)
+        if(reqComment){
+            if(reqComment.commentedBy.toString() === req.user._id){
+                const updatedComment = await CommentModel.findByIdAndUpdate(req.params.commentId, req.body, {new:true})
+                res.send({comment:updatedComment})
+            } else {
+                next(createError(401, {message:" not authorized to update the comment"}))
+
+            }
+        } else {
+            next(createError(404, {message:"bad request could not find the required comment"}))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+/***************************  delete a comment with commentId ************************/
+.delete("/:postId/comments/:commentId",JWTAuthMW, async(req, res, next) => {
+    try {
+        const reqComment = await CommentModel.findById(req.params.commentId)
+        if(reqComment){
+            if(reqComment.commentedBy.toString() === req.user._id){
+                const updatedComment = await CommentModel.findByIdAndDelete(req.params.commentId)
+                res.send()
+            } else {
+                next(createError(401, {message:" not authorized to update the comment"}))
+
+            }
+        } else {
+            next(createError(404, {message:"bad request could not find the required comment"}))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+
+/***************************  edit a comment with commentId ************************/
+.put("/comments/:commentId",JWTAuthMW, adminMW, async(req, res, next) => {
+    try {
+        const reqComment = await CommentModel.findById(req.params.commentId)
+        if(reqComment){
+            if(req.user.role === "admin"){
+                const updatedComment = await CommentModel.findByIdAndUpdate(req.params.commentId, req.body, {new:true})
+                res.send({comment:updatedComment})
+            } else {
+                next(createError(401, {message:" not authorized to update the comment"}))
+
+            }
+        } else {
+            next(createError(404, {message:"bad request could not find the required comment"}))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+/***************************  delete a comment with commentId ************************/
+.delete("/comments/:commentId",JWTAuthMW, adminMW, async(req, res, next) => {
+    try {
+        const reqComment = await CommentModel.findById(req.params.commentId)
+        if(reqComment){
+            if( req.user.role === "admin"){
+                const updatedComment = await CommentModel.findByIdAndDelete(req.params.commentId)
+                res.send()
+            } else {
+                next(createError(401, {message:" not authorized to update the comment"}))
+
+            }
+        } else {
+            next(createError(404, {message:"bad request could not find the required comment"}))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+
 export default postsRouter
