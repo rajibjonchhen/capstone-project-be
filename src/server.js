@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors"
 import usersRouter from "./services/users/users.js";
 import { badRequestHandler, genericErrorHandler, notFoundHandler, unauthorizedHandler } from "./services/errors/errorHandler.js";
+import postsRouter from "./services/posts/posts.js";
 
 
 
@@ -18,6 +19,8 @@ server.use(cors())
 
 /****************************  routes **************************/
 server.use("/users", usersRouter)
+server.use("/posts", postsRouter)
+
 /************************* Error Handler ***********************/
 server.use(badRequestHandler)
 server.use(unauthorizedHandler)
