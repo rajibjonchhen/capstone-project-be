@@ -172,7 +172,7 @@ const postsRouter = express.Router()
                 next(createError(401, " error - could not post a comment"))
             }
         } else {
-            next(createError(401, "bad request could not find the required post"))
+            next(createError(404, "bad request could not find the required post"))
         }
     } catch (error) {
         next(createError(error))
@@ -186,7 +186,27 @@ const postsRouter = express.Router()
         if(reqPost){
                 res.send({comments:reqPost.comments})
         } else {
-            next(createError(401, "bad request could not find the required post"))
+            next(createError(404, "bad request could not find the required post"))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+/***************************  get a comment with commentId ************************/
+.get("/:postId/comments/:commentId",JWTAuthMW, async(req, res, next) => {
+    try {
+        const reqPost = await PostModel.findById(req.params.postId)
+        if(reqPost){
+            const reqComment = reqPost.comments.find(comment => comment._id.toString() === req.params.commentId)
+            if(reqComment){
+                res.send({comment:reqComment})
+            }  else {
+
+                next(createError(404, " could not find the required comment"))
+            } 
+        } else {
+            next(createError(404, "bad request could not find the required post"))
         }
     } catch (error) {
         next(createError(error))
