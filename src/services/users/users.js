@@ -74,7 +74,7 @@ const usersRouter = express.Router()
             res.send({_id})
         } else {
 
-            next(createError(401, "bad request missing field could not create user"))
+            next(createError(401, {error:"bad request missing field could not create user"}))
         }
     } catch (error) {
         next(createHttpError(error))

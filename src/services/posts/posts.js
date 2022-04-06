@@ -1,7 +1,7 @@
 
 
 import express from "express";
-import createHttpError from "http-errors";
+import createError from "http-errors";
 import { JWTAuthMW } from "../authentication/JWTAuthMW.js";
 import { authenticateUser } from "../authentication/tools.js";
 import PostModel from "./post-schema.js"
@@ -18,11 +18,12 @@ const postsRouter = express.Router()
 .get("/:id",  JWTAuthMW, adminMW, async(req, res, next) => {
     try {
         if(req.user.role==="admin"){
+            console.log("admin search only")
             const post = await PostModel.findById(req.params.id)
             res.send({post})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -34,7 +35,7 @@ const postsRouter = express.Router()
             res.send({post : updatedPost})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -46,7 +47,7 @@ const postsRouter = express.Router()
             res.send()
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -57,7 +58,7 @@ const postsRouter = express.Router()
 /***************************  register new Post ***********************/
 .post("/",JWTAuthMW, async(req, res, next) => {
     try {
-        const newPost = new PostModel(req.body)
+        const newPost = new PostModel({...req.body, postedBy: req.user._id})
         const {_id} = await  newPost.save()
         if(_id){
             res.send({_id})
@@ -66,7 +67,7 @@ const postsRouter = express.Router()
             next(createError(401, "bad request missing field could not create Post"))
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -77,20 +78,32 @@ const postsRouter = express.Router()
             const posts = await PostModel.find()
             res.send({posts})
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
 
 /*****************************  get my detail *************************/
-.get("/me",  JWTAuthMW, async(req, res, next) => {
+.get("/me/all",  JWTAuthMW, async(req, res, next) => {
     try {
         if(req.user){
-            const posts = await PostModel.find({postedBy:req.user._id})
+            const posts = await PostModel.find({postedBy: req.user._id})
             res.send({posts})
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
+    }
+})
+
+/*****************************  get my detail *************************/
+.get("/me/:id",  JWTAuthMW, async(req, res, next) => {
+    try {
+        if(req.user){
+            const post = await PostModel.findById(req.params.id)
+            res.send({post})
+        }
+    } catch (error) {
+        next(createError(error))
     }
 })
 
@@ -98,16 +111,24 @@ const postsRouter = express.Router()
 /****************************  edit my post *************************/
 .put("/me/:id",  JWTAuthMW, async(req, res, next) => {
     try {
-        if(req.user){
-            const post = await PostModel.findByIdAndUpdate(req.post._id, req.body, {new: true})
-            if(post){
-                res.send({post})
+        const post = await PostModel.findById(req.params.id)
+        if(post){
+            console.log("post.postedBy -", post.postedBy)
+            console.log("post.postedBy.toObject", post.postedBy.toString())
+            console.log("req.user._id", req.user._id)
+            if(post.postedBy.toString() === req.user._id){
+                const updatedPost = await PostModel.findByIdAndUpdate(req.params.id, req.body, {new: true})
+                res.send({updatedPost})
             }else{
-                next(createHttpError(401, "not authorised to update this post"))
+                console.log("not authorised to update this post");
+                next(createError(401, {message:"not authorised to update this post"}))
             }
+        } else {
+            console.log("post not found");
+            next(createError(404, {message:"post not found"}))
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
@@ -116,16 +137,21 @@ const postsRouter = express.Router()
 .delete("/me/:id",  JWTAuthMW, async(req, res, next) => {
     try {
         if(req.user){
-            const post = await PostModel.findById(req.post._id)
+            const post = await PostModel.findById(req.params.id)
             if(post){
-                await PostModel.findByIdAndDelete(req.post._id)
-                res.send()
+                if(post.postedBy.toString === req.user._id){
+
+                    await PostModel.findByIdAndDelete(req.params.id)
+                    res.send()
+                }else {
+                    next(createError(401, {message:"not authorised to delete this post"}))
+                }
             }else{
-                next(createHttpError(401, "not authorised to delete this post"))
+                next(createError(404, {message:"post not found"}))
             }
         }
     } catch (error) {
-        next(createHttpError(error))
+        next(createError(error))
     }
 })
 
