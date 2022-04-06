@@ -1,13 +1,15 @@
 import express from "express";
-import createHttpError, { CreateHttpError } from "http-errors";
-import UserModal from "./user-schema.js"
+import createHttpError from "http-errors";
+import { JWTAuthMW } from "../authentication/JWTAuthMW.js";
+import { authenticateUser } from "../authentication/tools.js";
+import UserModel from "./user-schema.js"
 
 const usersRouter = express.Router()
 
 /***************************  register new user ***********************/
 .post("/signUp", async(req, res, next) => {
     try {
-        const newUser = new UserModal(req.body)
+        const newUser = new UserModel(req.body)
         const {_id} = await  newUser.save()
         res.send({_id})
     } catch (error) {
@@ -19,7 +21,15 @@ const usersRouter = express.Router()
 .post("/signIn", async(req, res, next) => {
     try {
         const {email, password} = req.body
-        const user = await UserModal.checkCredentials({email, password})
+        const reqUser = await UserModel.checkCredentials(email, password)
+        if(reqUser){
+            const user = await UserModel.findById(reqUser._id)
+            console.log(user)
+            const token  =  await authenticateUser(user)
+            res.send({user, token})
+        } else {
+            next(createHttpError(401, "Invalid email or password"))
+        }
     } catch (error) {
         next(createHttpError(error))
     }

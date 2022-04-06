@@ -2,9 +2,11 @@ import express from "express";
 import listEndpoints from "express-list-endpoints";
 import mongoose from "mongoose";
 import cors from "cors"
+import usersRouter from "./services/users/users.js";
 
 
-/********************** Port *******************/
+
+/****************************** Port ***************************/
 const server = express()
 const PORT =  process.env.PORT || 3001
 
@@ -12,8 +14,9 @@ const PORT =  process.env.PORT || 3001
 /***************************  middleware ***********************/
 server.use(express.json())
 server.use(cors())
-/****************************  routes **************************/
 
+/****************************  routes **************************/
+server.use("/users", usersRouter)
 /************************* Error Handler ***********************/
 
 /**************************   connection ***********************/

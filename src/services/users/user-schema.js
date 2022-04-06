@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt"
 
-const {Schema, modal} = mongoose
+const {Schema, model} = mongoose
 
 const UserSchema = new Schema({
     name: { type: String, required: true},
@@ -9,7 +9,8 @@ const UserSchema = new Schema({
     email: { type: String, required: true, unique:[true, "email must be unique"] },
     avatar: { type: String, default: "https://ui-avatars.com/api/?name=John+Doe" },
     password: { type: String },
-    typeOfUser :{ type: String, enum:["user", "admin", "investor"], default:"user"}
+    role :{ type: String, enum:["user", "admin", "investor"], default:"user"},
+    token : {type:String}
 },{
     timestamps: true,
 })
@@ -40,4 +41,4 @@ UserSchema.statics.checkCredentials = async function(email, plainPW){
         return null
 }
 
-export default modal("Users", UserSchema)
+export default model("Users", UserSchema)
