@@ -7,7 +7,7 @@ const PostSchema = new Schema({
     content : {type:String, required:true},
     postedBy : {type:Schema.Types.ObjectId, ref: "Users"},
     likes : [{type: Schema.Types.ObjectId, ref:"Users"}],
-    comments : [],
+    comments : [{type: Schema.Types.ObjectId, ref:"Comments", required: true}],
                 
 },{
     timestamps: true

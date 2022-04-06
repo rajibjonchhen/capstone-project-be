@@ -20,7 +20,7 @@ const postsRouter = express.Router()
     try {
         if(req.user.role==="admin"){
             console.log("admin search only")
-            const post = await PostModel.findById(req.params.postId).populate({path: "postedBy", select:"name surname"})
+            const post = await PostModel.findById(req.params.postId).populate({path: "postedBy", select:"name surname"}).populate({path:"comments", select:"_id comment"})
             res.send({post})
         }
     } catch (error) {
@@ -166,7 +166,8 @@ const postsRouter = express.Router()
         // const reqPost = await CommentModel.findById(postId)
         const newComment = new CommentModel({ ...req.body, post: postId, commentedBy:req.user._id })
         const { _id } = await newComment.save()
-        res.status(201).send({ _id })
+        const updatedPost = await PostModel.findByIdAndUpdate(postId,{$push : {comments: _id}}, {new:true}).populate({path:"comments" , select:"_id comment"})
+        res.status(201).send({ updatedPost:updatedPost, newCommentId: _id })
       } catch (error) {
         next(createError(error))
       }
@@ -240,6 +241,8 @@ const postsRouter = express.Router()
     }
 })
 
+
+/***************************  admin only comments section ************************/
 
 /***************************  edit a comment with commentId ************************/
 .put("/comments/:commentId",JWTAuthMW, adminMW, async(req, res, next) => {
