@@ -11,7 +11,12 @@ const usersRouter = express.Router()
     try {
         const newUser = new UserModel(req.body)
         const {_id} = await  newUser.save()
-        res.send({_id})
+        if(_id){
+            res.send({_id})
+        } else {
+
+            next(createError(401, "bad request missing field could not create user"))
+        }
     } catch (error) {
         next(createHttpError(error))
     }
@@ -37,9 +42,10 @@ const usersRouter = express.Router()
 
 
 /*****************************  get all users *************************/
-.get("/", async(req, res, next) => {
+.get("/", JWTAuthMW, async(req, res, next) => {
     try {
-        
+            const users = await UserModel.find()
+            res.send({users})
     } catch (error) {
         next(createHttpError(error))
     }
@@ -47,9 +53,12 @@ const usersRouter = express.Router()
 
 
 /*****************************  get my detail *************************/
-.get("/me", async(req, res, next) => {
+.get("/me",  JWTAuthMW, async(req, res, next) => {
     try {
-        
+        if(req.user){
+            const user = await UserModel.findById(req.user._id)
+            res.send({user})
+        }
     } catch (error) {
         next(createHttpError(error))
     }
@@ -57,7 +66,7 @@ const usersRouter = express.Router()
 
 
 /****************************  edit my detail *************************/
-.put("/me", async(req, res, next) => {
+.put("/me",  JWTAuthMW, async(req, res, next) => {
     try {
         
     } catch (error) {
@@ -67,7 +76,7 @@ const usersRouter = express.Router()
 
 
 /***************************  delete my detail ************************/
-.delete("/me", async(req, res, next) => {
+.delete("/me",  JWTAuthMW, async(req, res, next) => {
     try {
         
     } catch (error) {

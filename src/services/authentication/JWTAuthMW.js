@@ -9,15 +9,18 @@ export const JWTAuthMW = async(req, res, next) => {
         try {
             const token = req.headers.authorization.replace("Bearer ","")
             const payload = await verifyJWTToken(token)
-
-            req.user = {
-                _id : payload._id,
-                role : payload.role
+            if(payload._id) {
+                req.user = {
+                    _id : payload._id,
+                    role : payload.role
+                }
+            } else {
+                next(createHttpError(401, "invalid token"))
             }
 
             next()
         } catch (error) {
-           next(createError(error))
+           next(createHttpError(error))
         }
     }
 }

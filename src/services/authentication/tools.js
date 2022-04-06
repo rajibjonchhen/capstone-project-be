@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 
 export const authenticateUser = async(user) => {
-    console.log("token ===")
+    
     const token = await generateJWTToken({_id:user._id, role: user.role})
     console.log("token ===", token)
     return token
