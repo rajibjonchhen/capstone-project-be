@@ -6,6 +6,7 @@ import { authenticateUser } from "../authentication/tools.js";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import { v2 as cloudinary } from "cloudinary"
 import UserModel from "./user-schema.js"
+import { adminMW } from "../authentication/adminMW.js";
 
 
 const cloudinaryAvatarUploader = multer({
@@ -18,7 +19,52 @@ const cloudinaryAvatarUploader = multer({
 }).single("avatar")
 
 
+
 const usersRouter = express.Router()
+
+
+/***************************  admin only routes ************************/
+
+/***************************  get user by id route ************************/
+.get("/:id",  JWTAuthMW, adminMW, async(req, res, next) => {
+    try {
+        if(req.user.role==="admin"){
+            const user = await UserModel.findById(req.params.id)
+            res.send({user})
+        }
+    } catch (error) {
+        next(createHttpError(error))
+    }
+})
+
+/***************************  edit user by id route ************************/
+.put("/:id",  JWTAuthMW, adminMW, async(req, res, next) => {
+    try {
+        if(req.user){
+            const updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body,{new:true})
+            res.send({user : updatedUser})
+        }
+    } catch (error) {
+        next(createHttpError(error))
+    }
+})
+
+/***************************  delete user by id route ************************/
+.delete("/:id",  JWTAuthMW, adminMW, async(req, res, next) => {
+    try {
+        if(req.user){
+            const updatedUser = await UserModel.findByIdAndDelete(req.params.id)
+            res.send({user : updatedUser})
+        }
+    } catch (error) {
+        next(createHttpError(error))
+    }
+})
+
+
+
+/***************************  user routes ************************/
+
 /***************************  register new user ***********************/
 .post("/signUp", async(req, res, next) => {
     try {
