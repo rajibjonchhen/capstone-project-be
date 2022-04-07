@@ -52,6 +52,18 @@
 
     /***************************  product routes ************************/
 
+    /*****************************  get all my products *************************/
+    .get("/me", JWTAuthMW, async (req, res, next) => {
+        try {
+           
+            const products = await ProductModel.find({creator:req.user._id});
+            res.send({ products });
+            
+        } catch (error) {
+            next(createError(error));
+        }
+        })
+
     /***************************  get product byid route ************************/
     .get("/:productId", JWTAuthMW, async (req, res, next) => {
     try {
@@ -69,9 +81,9 @@
     .post("/",JWTAuthMW, async (req, res, next) => {
     try {
         const newProduct = new ProductModel({...req.body,creator:req.user._id});
-        const { _id } = await newProduct.save();
-        if (_id) {
-        res.send({ _id });
+        const product = await newProduct.save();
+        if (product) {
+        res.send({ product});
         } else {
         next(
             createError(401, {
@@ -96,17 +108,6 @@
     }
     })
 
-    /*****************************  get all my products *************************/
-    .get("/me", JWTAuthMW, async (req, res, next) => {
-    try {
-       
-        const products = await ProductModel.find({creator:req.user._id});
-        res.send({ products });
-        
-    } catch (error) {
-        next(createError(error));
-    }
-    })
 
     /****************************  edit my product *************************/
     .put("/me/:productId", JWTAuthMW, async (req, res, next) => {
