@@ -2,7 +2,6 @@
     import createError from "http-errors";
     import multer from "multer";
     import { JWTAuthMW } from "../authentication/JWTAuthMW.js";
-    import { authenticateUser } from "../authentication/tools.js";
     import { CloudinaryStorage } from "multer-storage-cloudinary";
     import { v2 as cloudinary } from "cloudinary";
     import ProductModel from "./product-schema.js";
@@ -15,7 +14,7 @@
         folder: "creators-space-products",
     },
     }),
-    }).single("image");
+    }).array("images");
 
     const productsRouter = express
     .Router()
@@ -158,13 +157,21 @@
     cloudinaryAvatarUploader,
     async (req, res, next) => {
         try {
-        if (req.user) {
+            const reqProduct = await ProductModel.findById(req.params.productId)
+        if (reqProduct) {
+            console.log(req.files)
+            const images = []
+            req.files.map(file => images.push(file.path))
+            
             const updatedProduct = await ProductModel.findByIdAndUpdate(
-            req.user._id,
-            { avatar: req.file.path },
-            { new: true }
-            );
-            res.send(updatedProduct)
+                req.params.productId,
+                {$push : {images:[...images] }},
+                { new: true }
+                );
+                res.send({updatedProduct})
+        } else{
+
+            next(createError(404, {message : "could not find the product"}));
         }
         } catch (error) {
         next(createError(error));
