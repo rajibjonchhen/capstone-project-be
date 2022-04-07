@@ -133,6 +133,31 @@ const postsRouter = express.Router()
     }
 })
 
+/****************************  like a post *************************/
+.put("/likes/:postId",  JWTAuthMW, async(req, res, next) => {
+    try {
+        const post = await PostModel.findById(req.params.postId)
+        if(post){
+            let isLiked = post.likes.findIndex(like => like.toString()=== req.user._id) !== -1
+            console.log( isLiked)
+            console.log( post.likes.toString(), "****", req.user._id)
+            if(isLiked){
+                const updatedPost  =  await PostModel.findByIdAndUpdate(req.params.postId, {$pull : {likes:req.user._id}}, {new:true})
+                console.log("post disliked -- updatedPost" , updatedPost);
+                res.send({updatedPost})
+            }else{
+                const updatedPost = await PostModel.findByIdAndUpdate(req.params.postId, {$push : {likes:req.user._id}}, {new:true})
+                console.log("post liked");
+                res.send({updatedPost})
+            }
+        } else {
+            console.log("post not found");
+            next(createError(404, {message:"post not found"}))
+        }
+    } catch (error) {
+        next(createError(error))
+    }
+})
 
 /***************************  delete my post ************************/
 .delete("/me/:postId",  JWTAuthMW, async(req, res, next) => {
