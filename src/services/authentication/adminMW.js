@@ -4,6 +4,6 @@ export const adminMW = async(req, res, next) => {
     if(req.user.role === "admin") {
         next()
     } else {
-        next(createHttpError(401, "not authorised"))
+        next(createHttpError(401, "not authorised admin only"))
     }
 }
