@@ -20,26 +20,18 @@ const cloudinaryAvatarUploader = multer({
 const usersRouter = express
   .Router()
 
+ 
+
+
   /***************************  admin only routes ************************/
 
-  /***************************  get user by id route ************************/
-  .get("/:id", JWTAuthMW, adminMW, async (req, res, next) => {
-    try {
-      if (req.user.role === "admin") {
-        const user = await UserModel.findById(req.params.id);
-        res.send({ user });
-      }
-    } catch (error) {
-      next(createError(error));
-    }
-  })
 
   /***************************  edit user by id route ************************/
-  .put("/:id", JWTAuthMW, adminMW, async (req, res, next) => {
+  .put("/:userId", JWTAuthMW, adminMW, async (req, res, next) => {
     try {
       if (req.user) {
-        const updatedUser = await UserModel.findByIdAndUpdate(
-          req.params.id,
+          const updatedUser = await UserModel.findByIdAndUpdate(
+          req.params.userId,
           req.body,
           { new: true }
         );
@@ -51,10 +43,10 @@ const usersRouter = express
   })
 
   /***************************  delete user by id route ************************/
-  .delete("/:id", JWTAuthMW, adminMW, async (req, res, next) => {
+  .delete("/:userId", JWTAuthMW, adminMW, async (req, res, next) => {
     try {
       if (req.user) {
-        const updatedUser = await UserModel.findByIdAndDelete(req.params.id);
+        const updatedUser = await UserModel.findByIdAndDelete(req.params.userId);
         res.send({ user: updatedUser });
       }
     } catch (error) {
@@ -62,7 +54,17 @@ const usersRouter = express
     }
   })
 
-  /***************************  user routes ************************/
+/***************************  user routes ************************/
+
+ /***************************  get user by id route ************************/
+ .get("/:userId", JWTAuthMW, async (req, res, next) => {
+    try {
+        const user = await UserModel.findById(req.params.userId);
+        res.send({ user });
+    } catch (error) {
+      next(createError(error));
+    }
+  })
 
   /***************************  register new user ***********************/
   .post("/signUp", async (req, res, next) => {
@@ -82,6 +84,9 @@ const usersRouter = express
       next(createError(error));
     }
   })
+
+   
+ 
 
   /******************************  login user ***************************/
   .post("/signIn", async (req, res, next) => {
@@ -126,7 +131,7 @@ const usersRouter = express
   .put("/me", JWTAuthMW, async (req, res, next) => {
     try {
       if (req.user) {
-        const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
+          const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
           new: true,
         });
         res.send({ user });
