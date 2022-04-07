@@ -114,10 +114,15 @@
     try {
         const product = await ProductModel.findById(req.params.productId)
         if (product) {
-        const updatedProduct = await ProductModel.findByIdAndUpdate(req.params.productId, req.body, {
-            new: true,
-        })
-        res.send({ updatedProduct });
+            if(product.creator.toString()===req.user._id){
+
+                const updatedProduct = await ProductModel.findByIdAndUpdate(req.params.productId, req.body, {
+                    new: true,
+                })
+                res.send({ updatedProduct });
+            }else {
+                next(createError(401, {message:" not authorised to update the product"}));
+                }
         } else {
         next(createError(404, {message:"could not find the product"}));
         }
@@ -128,18 +133,23 @@
 
     /***************************  delete my product ************************/
     .delete("/me/:productId", JWTAuthMW, async (req, res, next) => {
-    try {
-        const product = await ProductModel.findById(req.params.productId)
-        if (product) {
-        const updatedProduct = await ProductModel.findByIdAndDelete(req.params.productId)
-        res.send();
-        } else {
-        next(createError(404, {message:"could not find the product"}));
+        try {
+            const product = await ProductModel.findById(req.params.productId)
+            if (product) {
+                if(product.creator.toString()===req.user._id){
+    
+                    const updatedProduct = await ProductModel.findByIdAndDelete(req.params.productId)
+                    res.send();
+                }else {
+                    next(createError(401, {message:" not authorised to delete the product"}));
+                    }
+            } else {
+            next(createError(404, {message:"could not find the product"}));
+            }
+        } catch (error) {
+            next(createError(error));
         }
-    } catch (error) {
-        next(createError(error));
-    }
-    })
+        })
 
     /*****************************  add my avatar *************************/
     .post(
