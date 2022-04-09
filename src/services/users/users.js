@@ -78,6 +78,23 @@ usersRouter.post("/signIn", async (req, res, next) => {
     }
   });
 
+  /*****************************  google login user *************************/
+
+  usersRouter.get('/linkedinLogin', passport.authenticate('linkedin', { scope: ['r_basicprofile', 'r_emailaddress'] }));
+  
+  /*****************************  redirect  *************************/
+  usersRouter.get('/linkedinRedirect',passport.authenticate('linkedin'),(req, res, next) => {
+    try {
+      console.log("I am back")
+      const {token} = req.user
+      console.log(req.user)
+      res.redirect(`${process.env.FE_URL}/HomePage?token=${token}`)
+    } catch (error) {
+      next(createError(error));
+    }
+  }
+  );
+
  /*****************************  get my detail *************************/
  usersRouter.get("/me", JWTAuthMW, async (req, res, next) => {
   try {

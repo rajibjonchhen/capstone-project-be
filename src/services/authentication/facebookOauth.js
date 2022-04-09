@@ -1,13 +1,13 @@
 import createError from "http-errors";
 import passport from "passport";
-import GoogleStrategy from "passport-google-oauth20"
+import FacebookStrategy from "passport-facebook"
 import UserModel from "../users/user-schema.js"
 import { authenticateUser } from "./tools.js";
 
-const  googleStrategy = new GoogleStrategy({
-    clientID : process.env.GOOGLE_ID,
-    clientSecret : process.env.GOOGLE_SECRET,
-    callbackURL : `${process.env.API_URL}/users/googleRedirect`
+const  facebookStrategy = new FacebookStrategy({
+    clientID : process.env.FACEBOOK_ID,
+    clientSecret : process.env.FACEBOOK_SECRET,
+    callbackURL : `${process.env.API_URL}/users/facebookRedirect`
 }, 
 async(accessToken, refreshToken, profile, passportNext) => {
     try {
@@ -38,4 +38,4 @@ passport.serializeUser((data, passportNext) => {
     passportNext(null, data)
 })
 
-export default googleStrategy
+export default facebookStrategy

@@ -8,11 +8,15 @@ import postsRouter from "./services/posts/posts.js";
 import productsRouter from "./services/products/products.js";
 import passport from "passport";
 import googleStrategy from './services/authentication/googleOauth.js'
+import linkedinStrategy from "./services/authentication/linkedinOauth.js";
+import facebookStrategy from "./services/authentication/facebookOauth.js";
 
 /****************************** Port ***************************/
 const server = express()
 const PORT =  process.env.PORT || 3001
 passport.use("google", googleStrategy)
+passport.use("linkedin", linkedinStrategy )
+passport.use("facebook", facebookStrategy )
 
 /***************************  middleware ***********************/
 server.use(express.json())
