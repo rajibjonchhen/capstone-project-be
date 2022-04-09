@@ -10,7 +10,10 @@ const UserSchema = new Schema({
     avatar: { type: String, default: "https://ui-avatars.com/api/?name=John+Doe" },
     password: { type: String },
     role :{ type: String, enum:["user", "admin", "investor"], default:"user"},
-    token : {type:String}
+    token : {type:String},
+    googleId : {type:String},
+    facebookId : {type:String},
+    linkedinId : {type:String}
 },{
     timestamps: true,
 })

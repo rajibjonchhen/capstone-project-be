@@ -6,19 +6,31 @@ import usersRouter from "./services/users/users.js";
 import { badRequestHandler, forbiddenHandler, genericErrorHandler, notFoundHandler, unauthorizedHandler } from "./services/errors/errorHandler.js";
 import postsRouter from "./services/posts/posts.js";
 import productsRouter from "./services/products/products.js";
-
-
+import passport from "passport";
+import googleStrategy from './services/authentication/googleOauth.js'
 
 /****************************** Port ***************************/
 const server = express()
 const PORT =  process.env.PORT || 3001
-
+passport.use("google", googleStrategy)
 
 /***************************  middleware ***********************/
 server.use(express.json())
-server.use(cors())
 
+const whiteListOrigin = [process.env.PROD_URL, process.env.DEV_URL]
+
+server.use(cors({
+    origin: function(origin, next){
+        if(!origin || whiteListOrigin.indexOf(origin) !== -1){
+            next(null, true)
+        }else {
+            next(new Error("cors error"))
+        }
+    }
+}))
+server.use(passport.initialize())
 /****************************  routes **************************/
+
 server.use("/users", usersRouter)
 server.use("/posts", postsRouter)
 server.use("/products", productsRouter)
