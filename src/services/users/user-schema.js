@@ -13,7 +13,15 @@ const UserSchema = new Schema({
     token : {type:String},
     googleId : {type:String},
     facebookId : {type:String},
-    linkedinId : {type:String}
+    linkedinId : {type:String},
+    messages : [{
+        text : {type:String},
+        sender : {type:Schema.Types.ObjectId, rel:"Users"},
+        product : {type:Schema.Types.ObjectId, rel:"Products"},
+        meeting : {type:String},
+        place : {type:String},
+        markedAsRead : {type:Boolean, default:false}
+    }]
 },{
     timestamps: true,
 })

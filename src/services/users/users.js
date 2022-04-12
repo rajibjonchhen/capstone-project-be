@@ -72,7 +72,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
       console.log("I am back")
       const {token} = req.user
       console.log(req.user)
-      res.redirect(`${process.env.FE_URL}/HomePage?token=${token}`)
+      res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
       next(createError(error));
     }
@@ -88,7 +88,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
       console.log("I am back")
       const {token} = req.user
       console.log(req.user)
-      res.redirect(`${process.env.FE_URL}/HomePage?token=${token}`)
+      res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
       next(createError(error));
     }
@@ -98,11 +98,88 @@ usersRouter.post("/signIn", async (req, res, next) => {
  /*****************************  get my detail *************************/
  usersRouter.get("/me", JWTAuthMW, async (req, res, next) => {
   try {
-    console.log("hell000")
     if (req.user) {
       const user = await UserModel.findById(req.user._id);
       res.send({ user });
     }
+  } catch (error) {
+    next(createError(error));
+  }
+})
+
+ /*****************************  get all messages *************************/
+ usersRouter.get("/me/messages", JWTAuthMW, async (req, res, next) => {
+  try {
+    
+    if (req.user) {
+      const user = await UserModel.findById(req.user._id)
+      .populate({
+        path:"messages.sender",
+        select:"name surname avatar email"
+    })
+    .populate({
+      path:"messages.product",
+      select:"images title category summary"
+    });
+
+      res.send({messages: user.messages });
+    }
+  } catch (error) {
+    next(createError(error));
+  }
+})
+
+ /*****************************  post a new message *************************/
+ usersRouter.post("/me/messages", JWTAuthMW, async (req, res, next) => {
+  try {
+   
+    if (req.user) {
+        const user = await UserModel.findById(req.body.receiver)
+          if(user){
+            const newMessage = {
+              text : req.body.text,
+              sender : req.user._id,
+              product : req.body.product,
+              meeting : req.body.meeting,
+              place : req.body.place,
+              markedAsRead :req.body.markedAsRead
+            } 
+            const savedUser = await UserModel.findByIdAndUpdate(req.body.receiver,{$push:{messages:newMessage}},{new:true})
+            res.send({messages: savedUser.messages });
+          }else {
+            next(createError(404, {message:"couldn't find the user"}))
+          }
+        }else{
+          next(createError(404, {message:"couldn't find the user"}))
+      }
+  } catch (error) {
+    next(createError(error));
+  }
+})
+
+ /*****************************  post a new message *************************/
+ usersRouter.put("/me/messages/read", JWTAuthMW, async (req, res, next) => {
+  try {
+   
+    if (req.user) {
+        const user = await UserModel.findById(req.body.receiver)
+          if(user){
+            const newMessage = {
+              text : req.body.text,
+              sender : req.user._id,
+              product : req.body.product,
+              meeting : req.body.meeting,
+              place : req.body.place,
+              markedAsRead :req.body.markedAsRead
+            } 
+            const savedUser = await UserModel.findByIdAndUpdate(req.body.receiver,{$push:{messages:newMessage}},{new:true})
+            res.send({messages: savedUser.messages });
+          }else {
+            next(createError(404, {message:"couldn't find the user"}))
+          }
+        }else{
+          next(createError(404, {message:"couldn't find the user"}))
+      }
   } catch (error) {
     next(createError(error));
   }
@@ -115,7 +192,6 @@ usersRouter.post("/signIn", async (req, res, next) => {
           const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
           new: true,
         });
-        console.log("hellllllo")
         res.send({ user });
       }
     } catch (error) {
@@ -158,7 +234,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
           req.body,
           { new: true }
         );
-        console.log("hellllllo not me please")
+        
         res.send({ user: updatedUser });
       }
     } catch (error) {

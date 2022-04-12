@@ -75,9 +75,14 @@ const postsRouter = express
   /*****************************  get all Posts *************************/
   .get("/", JWTAuthMW, async (req, res, next) => {
     try {
-      const posts = await PostModel.find().populate({
+      const posts = await PostModel.find()
+      .populate({
+          path:"postedBy",
+          select:  "name surname avatar",
+      })
+      .populate({
         path: "comments.commentedBy",
-        select: "name surname",
+        select: "name surname avatar",
       });
       res.send({ posts });
     } catch (error) {
