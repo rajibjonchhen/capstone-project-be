@@ -69,9 +69,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
   /*****************************  redirect  *************************/
   usersRouter.get("/googleRedirect", passport.authenticate("google"),(req, res, next)=> {
     try {
-      console.log("I am back")
       const {token} = req.user
-      console.log(req.user)
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
       next(createError(error));
@@ -134,10 +132,12 @@ usersRouter.post("/signIn", async (req, res, next) => {
   try {
    
     if (req.user) {
+      console.log("req.body",req.body)
         const user = await UserModel.findById(req.body.receiver)
           if(user){
             const newMessage = {
               text : req.body.text,
+              receiver : req.body.receiver,
               sender : req.user._id,
               product : req.body.product,
               meeting : req.body.meeting,
@@ -203,6 +203,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
 
   /*****************************  get all users *************************/
   usersRouter.get("/", JWTAuthMW, async (req, res, next) => {
+    
     try {
       const users = await UserModel.find();
       res.send({ users });
@@ -271,6 +272,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
     JWTAuthMW,
     cloudinaryAvatarUploader,
     async (req, res, next) => {
+      console.log(req.file)
       try {
         if (req.user) {
           const updatedUser = await UserModel.findByIdAndUpdate(

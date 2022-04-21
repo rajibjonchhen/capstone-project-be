@@ -81,8 +81,9 @@ const postsRouter = express
           select:  "name surname avatar",
       })
       .populate({
+        path: "comments",
+      }).populate({
         path: "comments.commentedBy",
-        select: "name surname avatar",
       });
       res.send({ posts });
     } catch (error) {
@@ -197,6 +198,43 @@ const postsRouter = express
     }
   })
 
+
+/***************************  Like didlike a post ************************/
+.put("/:postId/likes", JWTAuthMW, async (req, res, next) => {
+  try {
+    const reqPost = await PostModel.findById(req.params.postId);
+    if (reqPost) {
+      const isLiked =  reqPost.likes.find(like => like.toString() === req.user._id)
+      if (!isLiked) {
+        const updatePost = await PostModel.findByIdAndUpdate(
+          req.params.postId,
+          {$push:{likes:req.user._id}},
+          { new: true }
+        );
+        console.log("userId",req.user._id ,"postLiked", updatePost)
+        res.send({ postLiked: updatePost });
+      } else {
+        const updatePost = await PostModel.findByIdAndUpdate(
+          req.params.postId,
+          {$pull:{likes:req.user._id}},
+          { new: true }
+          );
+          console.log("userId",req.user._id ,"postLiked", updatePost)
+          res.send({ postDisliked: updatePost });
+      }
+    } else {
+      next(
+        createError(404, {
+          message: "bad request could not find the required post",
+        })
+      );
+    }
+  } catch (error) {
+    next(createError(error));
+  }
+})
+
+
   /***************************  comments section ************************/
 
   /***************************  comment a post ************************/
@@ -224,11 +262,11 @@ const postsRouter = express
   /***************************  get all the comments of a post ************************/
   .get("/:postId/comments", JWTAuthMW, async (req, res, next) => {
     try {
-      const reqPost = await CommentModel.find({
+      const reqComments = await CommentModel.find({
         post: req.params.postId,
-      }).populate({ path: "post", select: "_id content" });
-      if (reqPost) {
-        res.send({ comments: reqPost });
+      }).populate({ path: "post", select: "_id content" }).populate({path:"commentedBy"});
+      if (reqComments) {
+        res.send({ comments: reqComments });
       } else {
         next(
           createError(404, {

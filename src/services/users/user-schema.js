@@ -16,9 +16,9 @@ const UserSchema = new Schema({
     linkedinId : {type:String},
     messages : [{
         text : {type:String},
-        sender : {type:Schema.Types.ObjectId, rel:"Users"},
-        product : {type:Schema.Types.ObjectId, rel:"Products"},
-        meeting : {type:String},
+        sender : {type:Schema.Types.ObjectId, ref:"Users"},
+        product : {type:Schema.Types.ObjectId, ref:"Products"},
+        title : {type:String},
         place : {type:String},
         markedAsRead : {type:Boolean, default:false}
     }]

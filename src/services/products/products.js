@@ -156,19 +156,26 @@
     JWTAuthMW,
     cloudinaryAvatarUploader,
     async (req, res, next) => {
+        console.log("req.files", req.files)
         try {
             const reqProduct = await ProductModel.findById(req.params.productId)
         if (reqProduct) {
             console.log(req.files)
             const images = []
             req.files.map(file => images.push(file.path))
-            
+            console.log(images)
             const updatedProduct = await ProductModel.findByIdAndUpdate(
                 req.params.productId,
-                {$push : {images:[...images] }},
-                { new: true }
+                {$push : {images:[...images]}},
+                { new: true}
                 );
-                res.send({updatedProduct})
+                if(updatedProduct){
+                    console.log("image uploaded",updatedProduct)
+                    res.send({updatedProduct})
+                }else{
+                    
+                    console.log("cannot upload image")
+                }
         } else{
 
             next(createError(404, {message : "could not find the product"}));
