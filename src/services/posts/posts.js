@@ -12,14 +12,22 @@ const postsRouter = express
   /***************************  admin only routes ************************/
 
   /***************************  get post by id route ************************/
-  .get("/:postId", JWTAuthMW, adminMW, async (req, res, next) => {
+  .get("/:postId", JWTAuthMW, async (req, res, next) => {
     try {
       if (req.user.role === "admin") {
         const post = await PostModel.findById(req.params.postId)
           .populate({ path: "postedBy", select: "name surname" })
           .populate({ path: "comments", select: "_id comment" });
-         
-          res.send({ post });
+
+        const isLiked = post.likes.find(like => like.toString() === req.user._id)
+
+          if(isLiked){
+            post.isLiked = true
+            res.send({ post });
+          }else {
+            post.isLiked = false
+            res.send({ post });
+          }
       }
     } catch (error) {
       next(createError(error));
@@ -150,37 +158,39 @@ const postsRouter = express
   })
 
   /****************************  like a post *************************/
-  .put("/likes/:postId", JWTAuthMW, async (req, res, next) => {
-    try {
-      const post = await PostModel.findById(req.params.postId);
-      if (post) {
-        let isLiked =
-          post.likes.findIndex((like) => like.toString() === req.user._id) !==
-          -1;
-        if (isLiked) {
-          const updatedPost = await PostModel.findByIdAndUpdate(
-            req.params.postId,
-            { $pull: { likes: req.user._id } },
-            { new: true }
-          );
+  // .put("/likes/:postId", JWTAuthMW, async (req, res, next) => {
+  //   try {
+  //     const post = await PostModel.findById(req.params.postId);
+  //     if (post) {
+  //       let isLiked =
+  //         post.likes.findIndex((like) => like.toString() === req.user._id) !==
+  //         -1;
+  //       if (isLiked) {
+  //         const updatedPost = await PostModel.findByIdAndUpdate(
+  //           req.params.postId,
+  //           { $pull: { likes: req.user._id } },
+  //           { new: true }
+  //         );
 
-          res.send({ updatedPost });
-        } else {
-          const updatedPost = await PostModel.findByIdAndUpdate(
-            req.params.postId,
-            { $push: { likes: req.user._id } },
-            { new: true }
-          );
-
-          res.send({ updatedPost });
-        }
-      } else {
-        next(createError(404, { message: "post not found" }));
-      }
-    } catch (error) {
-      next(createError(error));
-    }
-  })
+  //         updatedPost.isLiked = true
+  //         res.send({ updatedPost });
+  //       } else {
+  //         const updatedPost = await PostModel.findByIdAndUpdate(
+  //           req.params.postId,
+  //           { $push: { likes: req.user._id } },
+  //           { new: true }
+  //           );
+            
+  //           updatedPost.isLiked = false
+  //         res.send({ updatedPost });
+  //       }
+  //     } else {
+  //       next(createError(404, { message: "post not found" }));
+  //     }
+  //   } catch (error) {
+  //     next(createError(error));
+  //   }
+  // })
 
   /***************************  delete my post ************************/
   .delete("/me/:postId", JWTAuthMW, async (req, res, next) => {
@@ -215,21 +225,25 @@ const postsRouter = express
     if (reqPost) {
       const isLiked =  reqPost.likes.find(like => like.toString() === req.user._id)
       if (!isLiked) {
-        const updatePost = await PostModel.findByIdAndUpdate(
+        const updatedPost = await PostModel.findByIdAndUpdate(
           req.params.postId,
           {$push:{likes:req.user._id}},
           { new: true }
         );
-        console.log("userId",req.user._id ,"postLiked", updatePost)
-        res.send({ postLiked: updatePost });
+        console.log("userId",req.user._id ,"postLiked", updatedPost)
+
+        updatedPost.isLiked = true
+        res.send({ post: updatedPost });
       } else {
-        const updatePost = await PostModel.findByIdAndUpdate(
+        const updatedPost = await PostModel.findByIdAndUpdate(
           req.params.postId,
           {$pull:{likes:req.user._id}},
           { new: true }
           );
-          console.log("userId",req.user._id ,"postLiked", updatePost)
-          res.send({ postDisliked: updatePost });
+          console.log("userId",req.user._id ,"postLiked", updatedPost)
+
+          updatedPost.isLiked = false
+          res.send({ post: updatedPost });
       }
     } else {
       next(
