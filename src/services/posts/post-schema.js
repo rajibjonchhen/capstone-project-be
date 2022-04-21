@@ -8,6 +8,7 @@ const PostSchema = new Schema({
     postedBy : {type:Schema.Types.ObjectId, ref: "Users"},
     likes : [{type: Schema.Types.ObjectId, ref:"Users"}],
     comments : [{type: Schema.Types.ObjectId, ref:"Comments"}],
+    isLiked : {type:Boolean, default:false}
                 
 },{
     timestamps: true

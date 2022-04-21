@@ -18,7 +18,8 @@ const postsRouter = express
         const post = await PostModel.findById(req.params.postId)
           .populate({ path: "postedBy", select: "name surname" })
           .populate({ path: "comments", select: "_id comment" });
-        res.send({ post });
+         
+          res.send({ post });
       }
     } catch (error) {
       next(createError(error));
@@ -84,6 +85,14 @@ const postsRouter = express
         path: "comments",
       }).populate({
         path: "comments.commentedBy",
+      });
+      posts.forEach((post,i) => {
+        const isLiked = post.likes.find(like => like.toString() === req.user._id)
+        if(isLiked){
+          posts[i].isLiked = true
+        }else {
+          posts[i].isLiked = false
+        }
       });
       res.send({ posts });
     } catch (error) {
