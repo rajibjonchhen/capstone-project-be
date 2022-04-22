@@ -12,13 +12,12 @@ const ProductSchema = new Schema ({
     Likes	: [{type : Schema.Types.ObjectId, ref:"Users"}],
     askingPrice : {type:String},
     criteria : {type:String},
-    moreInfo : {
     agreement : {type:String},
     reqInvestment : {type : Number},
     inventionAddresses : {type:String},
-    auxiliaryProducts : {type:String},
-    patent : {type:String} 
-    }
+    patent : {type:String} ,
+    isLiked:{type:Boolean, default:false}
+    
 },{
     timestamps:true
 })
