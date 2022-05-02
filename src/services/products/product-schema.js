@@ -10,6 +10,7 @@ const ProductSchema = new Schema ({
     summary : {type : String, required : [true, "the summary is required"]},
     description	: {type : String, required : [true, "a short description is required"]},    
     Likes	: [{type : Schema.Types.ObjectId, ref:"Users"}],
+    LikesCounts :{type:Number, default:0},
     askingPrice : {type:String},
     criteria : {type:String},
     agreement : {type:String},

@@ -10,6 +10,8 @@ import passport from "passport";
 import googleStrategy from './services/authentication/googleOauth.js'
 import linkedinStrategy from "./services/authentication/linkedinOauth.js";
 import facebookStrategy from "./services/authentication/facebookOauth.js";
+import chatsRouter from "./services/chats/chats.js";
+import chatMessagesRouter from "./services/chats/chatMessage.js";
 
 /****************************** Port ***************************/
 const server = express()
@@ -38,6 +40,8 @@ server.use(passport.initialize())
 server.use("/users", usersRouter)
 server.use("/posts", postsRouter)
 server.use("/products", productsRouter)
+server.use("/chats", chatsRouter)
+server.use("/chatMessages", chatMessagesRouter)
 
 /************************* Error Handler ***********************/
 server.use(badRequestHandler)

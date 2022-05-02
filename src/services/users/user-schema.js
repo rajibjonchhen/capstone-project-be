@@ -20,6 +20,7 @@ const UserSchema = new Schema({
         product : {type:Schema.Types.ObjectId, ref:"Products"},
         title : {type:String},
         place : {type:String},
+        meeting:{type:String},
         markedAsRead : {type:Boolean, default:false}
     }]
 },{

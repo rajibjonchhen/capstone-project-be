@@ -85,8 +85,8 @@ productsRouter.post(
 
   /***************************  product routes ************************/
 
-  /*****************************  get all my products *************************/
-  productsRouter.get("/me", JWTAuthMW, async (req, res, next) => {
+ /*****************************  get all my products *************************/
+ productsRouter.get("/me", JWTAuthMW, async (req, res, next) => {
     try {
       const products = await ProductModel.find({ creator: req.user._id })
 
@@ -109,7 +109,7 @@ productsRouter.post(
     try {
       const product = await ProductModel.findById(req.params.productId).populate({path:"creator", select:"name surname email avatar "})
       
-      const isLiked = product.likes.find(like => like.toString() === req.user._id)
+      const isLiked = product.Likes.find(like => like.toString() === req.user._id)
 
       if(isLiked){
         product.isLiked = true
@@ -122,6 +122,9 @@ productsRouter.post(
       next(createError(error))
     }
   })
+
+ 
+
 
   /***************************  register new product ***********************/
   productsRouter.post("/", JWTAuthMW, async (req, res, next) => {
@@ -226,10 +229,11 @@ productsRouter.post(
       const reqProduct = await ProductModel.findById(req.params.productId);
       if (reqProduct) {
         const isLiked =  reqProduct.Likes.find(like => like.toString() === req.user._id)
+        const counts = reqProduct.Likes.length
         if (!isLiked) {
           const updatedProduct = await ProductModel.findByIdAndUpdate(
             req.params.productId,
-            {$push:{Likes:req.user._id}},
+            {$push:{Likes:req.user._id}, LikesCounts:counts+1},
             { new: true }
           );
           console.log("userId",req.user._id ,"productLiked", updatedProduct)
@@ -239,7 +243,7 @@ productsRouter.post(
         } else {
           const updatedProduct = await ProductModel.findByIdAndUpdate(
             req.params.productId,
-            {$pull:{Likes:req.user._id}},
+            {$pull:{Likes:req.user._id},LikesCounts:counts-1},
             { new: true }
             );
             console.log("userId",req.user._id ,"productLiked", updatedProduct)
