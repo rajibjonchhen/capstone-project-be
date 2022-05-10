@@ -8,15 +8,19 @@ import postsRouter from "./services/posts/posts.js";
 import productsRouter from "./services/products/products.js";
 import passport from "passport";
 import googleStrategy from './services/authentication/googleOauth.js'
+import googleStrategyInvestor from './services/authentication/googleOauthInvestor.js'
+import googleStrategyCreator from './services/authentication/googleOauthCreator.js'
 import linkedinStrategy from "./services/authentication/linkedinOauth.js";
 import facebookStrategy from "./services/authentication/facebookOauth.js";
-import chatsRouter from "./services/chats/chats.js";
-import chatMessagesRouter from "./services/chats/chatMessage.js";
+import chatsRouter from "./services/chat.js/chats.js";
+import chatMessagesRouter from "./services/chat.js/chatMessage.js";
 
 /****************************** Port ***************************/
 const server = express()
 const PORT =  process.env.PORT || 3001
 passport.use("google", googleStrategy)
+passport.use("googleInvestor", googleStrategyInvestor)
+passport.use("googleCreator", googleStrategyCreator)
 passport.use("linkedin", linkedinStrategy )
 passport.use("facebook", facebookStrategy )
 

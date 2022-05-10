@@ -9,7 +9,7 @@ const UserSchema = new Schema({
     email: { type: String, required: true, unique:[true, "email must be unique"] },
     avatar: { type: String, default: "https://ui-avatars.com/api/?name=John+Doe" },
     password: { type: String },
-    role :{ type: String, enum:["user", "admin", "investor"], default:"user"},
+    role :{ type: String, enum:["user", "admin", "investor","creator"], default:"user"},
     token : {type:String},
     googleId : {type:String},
     facebookId : {type:String},

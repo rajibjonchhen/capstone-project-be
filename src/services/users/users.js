@@ -65,9 +65,35 @@ usersRouter.post("/signIn", async (req, res, next) => {
 
   /*****************************  google login user *************************/
   usersRouter.get("/googleLogin", passport.authenticate("google",{scope:["email", "profile"]}));
-
+  
   /*****************************  redirect  *************************/
   usersRouter.get("/googleRedirect", passport.authenticate("google"),(req, res, next)=> {
+    try {
+      const {token} = req.user
+      res.redirect(`${process.env.FE_URL}/home?token=${token}`)
+    } catch (error) {
+      next(createError(error));
+    }
+  });
+
+  /*****************************  google investor login  *************************/
+  usersRouter.get("/googleLoginInvestor", passport.authenticate("googleInvestor",{scope:["email", "profile"]}));
+
+  /*****************************  investor redirect  *************************/
+  usersRouter.get("/googleRedirectInvestor", passport.authenticate("googleInvestor"),(req, res, next)=> {
+    try {
+      const {token} = req.user
+      res.redirect(`${process.env.FE_URL}/home?token=${token}`)
+    } catch (error) {
+      next(createError(error));
+    }
+  });
+
+  /*****************************  google investor login  *************************/
+  usersRouter.get("/googleLoginCreator", passport.authenticate("googleCreator",{scope:["email", "profile"]}));
+
+  /*****************************  investor redirect  *************************/
+  usersRouter.get("/googleRedirectCreator", passport.authenticate("googleCreator"),(req, res, next)=> {
     try {
       const {token} = req.user
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)

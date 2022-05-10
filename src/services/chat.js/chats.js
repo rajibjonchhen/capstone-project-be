@@ -2,35 +2,36 @@ import ChatModel from "./chat-schema.js"
 import ChatMessageModel from "./chat-message-schema.js"
 import express from "express"
 import { JWTAuthMW } from "../authentication/JWTAuthMW.js"
+import createError from "http-errors";
+
 
 const chatsRouter = express.Router()
 
 // ******************* post a new message *********************
 chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
-    // const newMessage = { title:req.body.title, text:req.body.text, place:req.body.place, meeting:req.body.meeting}
-    const message = new ChatMessageModel(req.body.message)
-    const savedMessage = await message.save()
 
     try {
         const recipient = req.body.recipient
         const sender = req.user._id
         if(sender){
             if(!recipient){
-                next(createHttpError(400, "Recipient id is missing"))
+                next(createError(400, "Recipient id is missing"))
             } 
             let chat = await ChatModel.findOne({
                 'members':{
                     $all:[ sender, recipient]
                 }
             })
+            .populate({path:"messages"})
+            .populate({path:"messages.sender"})
             if(chat){
-                const updatedChat = await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages:savedMessage._id}},{new:true})
-                res.send(updatedChat)
+
+                res.send({chat})
             } else{
-                const newChat = new ChatModel({members : [sender, recipient],$push:{messages:savedMessage._id}},{new:true})
+                const newChat = new ChatModel({members : [sender, recipient]})
                 const savedChat = await newChat.save()
                 if(savedChat){
-                    res.status(201).send(savedChat)
+                    res.status(201).send({chat:savedChat})
                 }else{
                     next(createError(500,{message: "Something went wrong unable to save new chat"}))
                 }
@@ -38,11 +39,35 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
         } else{
             next(createError(401, {message:"sender's id is missing"}))
         }
+    } catch (error) {
+        next(createError(500,error))
+    }
+})
+
+//***************** post message ******************/ 
+chatsRouter.post("/:chatMessageId", JWTAuthMW, async (req, res, next) => {
+    const message = new ChatMessageModel({...req.body.message, sender:req.user._id})
+    const savedMessage = await message.save()
+    try {
+            if(req.user._id){const chat = await ChatModel.findById(req.params.chatMessageId)
+            if(chat){
+                const updatedChat = await ChatModel.findByIdAndUpdate(req.params.chatMessageId, {$push:{messages:savedMessage._id}},{new:true})
+                .populate({path:"messages", select:"title text sender createdAt"})
+                .populate({path:"messages.sender", select:"name surname avatar"})
+                res.send(updatedChat)
+            } else{
+                next(createError(400, {message:"bad request"}))
+            }
+        } else{
+            next(createError(401, {message:"sender's id is missing"}))
+
+        }
        
     } catch (error) {
         next(createError(error))
     }
 })
+
 
 
 // ******************* get all messages *********************

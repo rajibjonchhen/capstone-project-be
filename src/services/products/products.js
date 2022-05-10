@@ -38,7 +38,7 @@ productsRouter.post(
             req.params.productId,
             { $push: { images: [...images] } },
             { new: true }
-          )
+          ).populate({path:"creator", select:"name surname email avatar _id"})
           if (updatedProduct) {
             console.log("image uploaded", updatedProduct)
             res.send({ updatedProduct })
@@ -88,7 +88,7 @@ productsRouter.post(
  /*****************************  get all my products *************************/
  productsRouter.get("/me", JWTAuthMW, async (req, res, next) => {
     try {
-      const products = await ProductModel.find({ creator: req.user._id })
+      const products = await ProductModel.find({ creator: req.user._id }).populate({path:'creator'})
 
       products.forEach((product,i) => {
         const isLiked = product.Likes.find(like => like.toString() === req.user._id)
@@ -105,7 +105,7 @@ productsRouter.post(
   })
 
   /***************************  get product byid route ************************/
-  productsRouter.get("/:productId", JWTAuthMW, async (req, res, next) => {
+  productsRouter.get("/:productId", async (req, res, next) => {
     try {
       const product = await ProductModel.findById(req.params.productId).populate({path:"creator", select:"name surname email avatar "})
       
@@ -149,19 +149,29 @@ productsRouter.post(
   })
 
   /*****************************  get all products *************************/
-  productsRouter.get("/", JWTAuthMW, async (req, res, next) => {
+  productsRouter.get("/", async (req, res, next) => {
     try {
-      const products = await ProductModel.find()
-      products.forEach((product,i) => {
-        const isLiked = product.Likes.find(like => like.toString() === req.user._id)
-        if(isLiked){
-          products[i].isLiked = true
-        }else {
-            products[i].isLiked = false
-        }
-      });
-      res.send({ products })
-    } catch (error) {
+        const search = req.query.s
+        if(req.query.s){
+            console.log("req.query.s", search)
+            const products = await ProductModel.find({ $include: {$or:[{title : `${search}`}]}})
+            console.log("products.req.query.s  ", products)
+            
+            res.send({ products })
+        }else{
+
+            const products = await ProductModel.find()
+            //   products.forEach((product,i) => {
+                //     const isLiked = product.Likes.find(like => like.toString() === req.user._id)
+                //     if(isLiked){
+                    //       products[i].isLiked = true
+                    //     }else {
+                        //         products[i].isLiked = false
+                        //     }
+                        //   });
+                        res.send({ products })
+                    }
+                    } catch (error) {
       next(createError(error))
     }
   })
@@ -199,6 +209,9 @@ productsRouter.post(
   productsRouter.delete("/me/:productId", JWTAuthMW, async (req, res, next) => {
     try {
       const product = await ProductModel.findById(req.params.productId)
+      console.log(req.params.productId)
+      console.log(req.user._id)
+      console.log(product)
       if (product) {
         if (product.creator.toString() === req.user._id) {
           const updatedProduct = await ProductModel.findByIdAndDelete(
