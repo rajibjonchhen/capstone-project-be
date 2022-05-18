@@ -23,16 +23,18 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
                     $all:[ sender, recipient]
                 }
             })
+            .populate({path:"members", select:""})
             .populate({path:"messages"})
-            .populate({path:"messages.sender"})
+            .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
             if(chat){
                 if(message){
                     const message = new ChatMessageModel({...req.body.message, sender, chatId:chat._id, recipient})
                     const savedMessage = await message.save()
 
                     const updatedChat = await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages:savedMessage._id}},{new:true})
+                    .populate({path:"members", select:""})
                     .populate({path:"messages", select:"title text sender createdAt markedAsRead chatId"})
-                    .populate({path:"messages.sender", select:"name surname avatar role"})
+                    .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
                     res.send({chat:updatedChat})
                 } else{
                 res.send({chat})
@@ -46,8 +48,9 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
                         const savedMessage = await message.save()
 
                         const updatedChat = await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages:savedMessage._id}},{new:true})
+                        .populate({path:"members", select:""})
                         .populate({path:"messages", select:"title text sender createdAt markedAsRead"})
-                        .populate({path:"messages.sender", select:"name surname avatar role"})
+                        .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
                         res.send({chat:updatedChat})
                     } else{
                         res.status(201).send({chat:savedChat})
@@ -77,7 +80,8 @@ chatsRouter.post("/:chatId", JWTAuthMW, async (req, res, next) => {
             if(chat){
                 const updatedChat = await ChatModel.findByIdAndUpdate(chatId, {$push:{messages:savedMessage._id}},{new:true})
                 .populate({path:"messages", select:""})
-                .populate({path:"messages.sender", select:""})
+                .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
+
                 res.send(updatedChat)
             } else{
                 console.log("sender's id is missing")
