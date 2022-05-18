@@ -5,6 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "node server.js",
     "dev": "nodemon -r dotenv/config -e js ./src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -36,7 +37,8 @@
     "passport-facebook": "^3.0.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-linkedin": "^1.0.0",
-    "query-to-mongo": "^0.10.2"
+    "query-to-mongo": "^0.10.2",
+    "vercel": "^24.2.3"
   },
   "devDependencies": {
     "dotenv": "^16.0.0",

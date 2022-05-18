@@ -141,7 +141,8 @@ productsRouter.get("/allProducts", JWTAuthMW, async (req, res, next) => {
 
     if (req.query.s) {
       const products = await ProductModel.find({
-        $or: [{ title: `${search}` }],
+        // $or: [{ title: `${search}` }],
+        $or: [{"title": `/^${search}/i`},{"name": `/^${search}/i`}, {"description": `/^${search}/i`}, {"summary": `/^${search}/i`}]
       });
 
       res.send({ products });
