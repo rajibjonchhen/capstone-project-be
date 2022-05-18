@@ -12,6 +12,7 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
 
     try {
         const recipient = req.body.recipient
+        const message = req.body.message
         const sender = req.user._id
         if(sender){
             if(!recipient){
@@ -25,13 +26,32 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
             .populate({path:"messages"})
             .populate({path:"messages.sender"})
             if(chat){
+                if(message){
+                    const message = new ChatMessageModel({...req.body.message, sender, chatId:chat._id, recipient})
+                    const savedMessage = await message.save()
 
+                    const updatedChat = await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages:savedMessage._id}},{new:true})
+                    .populate({path:"messages", select:"title text sender createdAt markedAsRead chatId"})
+                    .populate({path:"messages.sender", select:"name surname avatar role"})
+                    res.send({chat:updatedChat})
+                } else{
                 res.send({chat})
+                }
             } else{
                 const newChat = new ChatModel({members : [sender, recipient]})
                 const savedChat = await newChat.save()
                 if(savedChat){
-                    res.status(201).send({chat:savedChat})
+                    if(message){
+                        const message = new ChatMessageModel({...req.body.message, sender, chatId:chat._id, recipient})
+                        const savedMessage = await message.save()
+
+                        const updatedChat = await ChatModel.findByIdAndUpdate(chat._id, {$push:{messages:savedMessage._id}},{new:true})
+                        .populate({path:"messages", select:"title text sender createdAt markedAsRead"})
+                        .populate({path:"messages.sender", select:"name surname avatar role"})
+                        res.send({chat:updatedChat})
+                    } else{
+                        res.status(201).send({chat:savedChat})
+                    }
                 }else{
                     next(createError(500,{message: "Something went wrong unable to save new chat"}))
                 }
@@ -45,15 +65,16 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
 })
 
 //***************** post message ******************/ 
-chatsRouter.post("/:chatMessageId", JWTAuthMW, async (req, res, next) => {
-    const message = new ChatMessageModel({...req.body.message, sender:req.user._id})
+chatsRouter.post("/:chatId", JWTAuthMW, async (req, res, next) => {
+    const chatId = req.params.chatId
+    const message = new ChatMessageModel({...req.body.message, sender:req.user._id, chatId})
     const savedMessage = await message.save()
     try {
-            if(req.user._id){const chat = await ChatModel.findById(req.params.chatMessageId)
+            if(req.user._id){const chat = await ChatModel.findById(chatId)
             if(chat){
-                const updatedChat = await ChatModel.findByIdAndUpdate(req.params.chatMessageId, {$push:{messages:savedMessage._id}},{new:true})
-                .populate({path:"messages", select:"title text sender createdAt"})
-                .populate({path:"messages.sender", select:"name surname avatar"})
+                const updatedChat = await ChatModel.findByIdAndUpdate(chatId, {$push:{messages:savedMessage._id}},{new:true})
+                .populate({path:"messages", select:""})
+                .populate({path:"messages.sender", select:""})
                 res.send(updatedChat)
             } else{
                 next(createError(400, {message:"bad request"}))
@@ -71,19 +92,51 @@ chatsRouter.post("/:chatMessageId", JWTAuthMW, async (req, res, next) => {
 
 
 // ******************* get all messages *********************
-chatsRouter.get("/", JWTAuthMW,  async(req, res, next) => {
+chatsRouter.get("/me", JWTAuthMW,  async(req, res, next) => {
     try {
-        const reqMsg = await ChatModel.find({members: req.user._id}).populate({path:"members", select:"name surname email avatar"}).populate({path:"messages",  select:"title text meeting place"})
+        const reqMsg = await ChatModel.find({members: req.user._id})
+        .populate({path:"members", select:""})
+        .populate({path:"messages",  select:""})
+        .populate({path : "messages.sender", select:"" })
         res.send({messages:reqMsg})
     } catch (error) {
         next(createError(error))
     }
 })
 
+
+//***************** get unread chat Messages ******************/ 
+chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
+    try {
+        const reqChat = await ChatModel.find({members: req.user._id})
+         .populate({path : "members", select:""})
+        .populate({path : "messages",  select:""})
+        .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
+        
+        const unreadMessages = []
+
+      
+    console.log(unreadMessages)
+        for( let i = 0;  i < reqChat.length; i++ ){
+            for(let j = 0; j < reqChat[i].messages.length; j++){
+                
+                if(reqChat[i].messages[j].markedAsRead === false && reqChat[i].messages[j].sender._id !== req.user._id ){
+                    unreadMessages.push(reqChat[i].messages[j])
+                }
+            }
+        }
+        
+        res.send({messages:unreadMessages})
+    } catch (error) {
+        next(createError(error))
+    }
+})
+
+
 // ******************* get message with id *********************
 chatsRouter.get("/:chatId", JWTAuthMW,  async(req, res, next) => {
     try {
-        const reqMsg = await ChatModel.findOne({_id:req.params.chatId, "members": req.user._id}).populate({path:"members", select:"name surname email avatar"}).populate({path:"messages",  select:"title text meeting place"})
+        const reqMsg = await ChatModel.findOne({_id:req.params.chatId, "members": req.user._id}).populate({path:"members", select:"name surname email avatar"}).populate({path:"messages",  select:"title text meeting place markedAsRead sender"})
 
         if(reqMsg){
             res.send({messages:reqMsg})

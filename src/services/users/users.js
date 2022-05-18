@@ -109,9 +109,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
   /*****************************  redirect  *************************/
   usersRouter.get('/linkedinRedirect',passport.authenticate('linkedin'),(req, res, next) => {
     try {
-      console.log("I am back")
       const {token} = req.user
-      console.log(req.user)
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
       next(createError(error));
@@ -123,8 +121,31 @@ usersRouter.post("/signIn", async (req, res, next) => {
  usersRouter.get("/me", JWTAuthMW, async (req, res, next) => {
   try {
     if (req.user) {
-      const user = await UserModel.findById(req.user._id);
+      const user = await UserModel.findById(req.user._id).populate({path:"productsLiked", select:"" })
+      for(let i = 0 ; i < user.productsLiked.length; i++){
+        user.productsLiked[i].isLiked = true
+      }
+      // user.productsLiked.forEach((product, i) =>
+      //   user.productsLiked[i].isLiked = true
+      // )
       res.send({ user });
+    }
+  } catch (error) {
+    next(createError(error));
+  }
+})
+/***************************  get all liked product ************************/
+usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
+  try {
+    if (req.user) {
+      const user = await UserModel.findById(req.user._id).populate({path:"productsLiked", select:"" })
+      for(let i = 0 ; i < user.productsLiked.length; i++){
+        user.productsLiked[i].isLiked = true
+      }
+      // user.productsLiked.forEach((product, i) =>
+      //   user.productsLiked[i].isLiked = true
+      // )
+      res.send({ productsLiked: user.productsLiked });
     }
   } catch (error) {
     next(createError(error));
@@ -158,7 +179,6 @@ usersRouter.post("/signIn", async (req, res, next) => {
   try {
    
     if (req.user) {
-      console.log("req.body",req.body)
         const user = await UserModel.findById(req.body.receiver)
           if(user){
             const newMessage = {
@@ -217,7 +237,10 @@ usersRouter.post("/signIn", async (req, res, next) => {
       if (req.user) {
           const user = await UserModel.findByIdAndUpdate(req.user._id, req.body, {
           new: true,
-        });
+        }).populate({path:"productsLiked", select:"" });
+        user.productsLiked.forEach((product, i) =>
+          user.productsLiked[i].isLiked = true
+        )
         res.send({ user });
       }
     } catch (error) {
@@ -231,7 +254,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
   usersRouter.get("/", JWTAuthMW, async (req, res, next) => {
     
     try {
-      const users = await UserModel.find();
+      const users = await UserModel.find({'_id': {$ne : req.user._id}})
       res.send({ users });
     } catch (error) {
       next(createError(error));
@@ -298,7 +321,6 @@ usersRouter.post("/signIn", async (req, res, next) => {
     JWTAuthMW,
     cloudinaryAvatarUploader,
     async (req, res, next) => {
-      console.log(req.file)
       try {
         if (req.user) {
           const updatedUser = await UserModel.findByIdAndUpdate(

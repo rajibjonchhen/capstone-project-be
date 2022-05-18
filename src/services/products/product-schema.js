@@ -18,7 +18,6 @@ const ProductSchema = new Schema ({
     inventionAddresses : {type:String},
     patent : {type:String} ,
     isLiked:{type:Boolean, default:false}
-    
 },{
     timestamps:true
 })
