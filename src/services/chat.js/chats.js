@@ -126,13 +126,15 @@ chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
         for( let i = 0;  i < reqChat.length; i++ ){
             for(let j = 0; j < reqChat[i].messages.length; j++){
                 
-                if(reqChat[i].messages[j].markedAsRead === false && reqChat[i].messages[j].sender._id !== req.user._id ){
+                if(reqChat[i].messages[j].markedAsRead === false && reqChat[i].messages[j].sender._id.toString() !== req.user._id.toString() ){
                     unreadMessages.push(reqChat[i].messages[j])
                 }
             }
         }
+
+        let sortedMessage = unreadMessages.sort((a, b) => Date.parse(new Date(a.createdAt)) - Date.parse(new Date(b.createdAt))).reverse();
         
-        res.send({messages:unreadMessages})
+        res.send({messages:sortedMessage})
     } catch (error) { 
         console.log(error)
         next(createError(error))
