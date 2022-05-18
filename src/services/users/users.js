@@ -32,6 +32,8 @@ usersRouter.post("/signUp", async (req, res, next) => {
       const token = await authenticateUser(user);
       res.send({user, token});
     } else {
+    console.log(error)
+
       next(
         createError(401, {
           message: "bad request missing field could not create user",
@@ -39,6 +41,7 @@ usersRouter.post("/signUp", async (req, res, next) => {
       );
     }
   } catch (error) {
+    console.log(error)
     next(createError(error));
   }
 })
@@ -54,9 +57,12 @@ usersRouter.post("/signIn", async (req, res, next) => {
       const token = await authenticateUser(user);
       res.send({ user, token });
     } else {
+    console.log(error)
+
       next(createError(401, { message: "User not found invalid email or password" }));
     }
   } catch (error) {
+    console.log(error)
     next(createError(error));
   }
 })
@@ -72,6 +78,7 @@ usersRouter.post("/signIn", async (req, res, next) => {
       const {token} = req.user
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
+    console.log(error)
       next(createError(error));
     }
   });
@@ -98,6 +105,8 @@ usersRouter.post("/signIn", async (req, res, next) => {
       const {token} = req.user
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
+    console.log(error)
+
       next(createError(error));
     }
   });
@@ -112,6 +121,8 @@ usersRouter.post("/signIn", async (req, res, next) => {
       const {token} = req.user
       res.redirect(`${process.env.FE_URL}/home?token=${token}`)
     } catch (error) {
+    console.log(error)
+
       next(createError(error));
     }
   }
@@ -131,6 +142,8 @@ usersRouter.post("/signIn", async (req, res, next) => {
       res.send({ user });
     }
   } catch (error) {
+    console.log(error)
+
     next(createError(error));
   }
 })
@@ -148,6 +161,8 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
       res.send({ productsLiked: user.productsLiked });
     }
   } catch (error) {
+    console.log(error)
+
     next(createError(error));
   }
 })
@@ -170,6 +185,8 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
       res.send({messages: user.messages });
     }
   } catch (error) {
+    console.log(error)
+
     next(createError(error));
   }
 })
@@ -193,12 +210,18 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
             const savedUser = await UserModel.findByIdAndUpdate(req.body.receiver,{$push:{messages:newMessage}},{new:true})
             res.send({messages: savedUser.messages });
           }else {
+          console.log(error)
+
             next(createError(404, {message:"couldn't find the user"}))
           }
         }else{
+          console.log(error)
+
           next(createError(404, {message:"couldn't find the user"}))
       }
   } catch (error) {
+    console.log(error)
+
     next(createError(error));
   }
 })
@@ -221,12 +244,18 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
             const savedUser = await UserModel.findByIdAndUpdate(req.body.receiver,{$push:{messages:newMessage}},{new:true})
             res.send({messages: savedUser.messages });
           }else {
+            console.log(error)
+
             next(createError(404, {message:"couldn't find the user"}))
           }
         }else{
+          console.log(error)
+
           next(createError(404, {message:"couldn't find the user"}))
       }
   } catch (error) {
+    console.log(error)
+
     next(createError(error));
   }
 })
@@ -244,6 +273,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
         res.send({ user });
       }
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -257,6 +287,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
       const users = await UserModel.find({'_id': {$ne : req.user._id}})
       res.send({ users });
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -267,6 +298,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
         const user = await UserModel.findById(req.params.userId);
         res.send({ user });
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -288,6 +320,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
         res.send({ user: updatedUser });
       }
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -300,6 +333,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
         res.send({ user: updatedUser });
       }
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -311,6 +345,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
         res.send();
       }
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   })
@@ -331,6 +366,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
           res.send(updatedUser)
         }
       } catch (error) {
+        console.log(error)
         next(createError(error));
       }
     }
@@ -342,6 +378,7 @@ usersRouter.get("/me/productsLiked", JWTAuthMW, async (req, res, next) => {
     try {
       res.send({ token: null });
     } catch (error) {
+      console.log(error)
       next(createError(error));
     }
   });

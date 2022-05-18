@@ -53,13 +53,16 @@ chatsRouter.post("/", JWTAuthMW,  async(req, res, next) => {
                         res.status(201).send({chat:savedChat})
                     }
                 }else{
+                    console.log(error)
                     next(createError(500,{message: "Something went wrong unable to save new chat"}))
                 }
             }
         } else{
+            console.log("sender's id is missing")
             next(createError(401, {message:"sender's id is missing"}))
         }
-    } catch (error) {
+    } catch (error) { 
+        console.log(error)
         next(createError(500,error))
     }
 })
@@ -77,14 +80,17 @@ chatsRouter.post("/:chatId", JWTAuthMW, async (req, res, next) => {
                 .populate({path:"messages.sender", select:""})
                 res.send(updatedChat)
             } else{
+                console.log("sender's id is missing")
                 next(createError(400, {message:"bad request"}))
             }
         } else{
+            console.log("sender's id is missing")
             next(createError(401, {message:"sender's id is missing"}))
 
         }
        
-    } catch (error) {
+    } catch (error) { 
+        console.log(error)
         next(createError(error))
     }
 })
@@ -99,7 +105,8 @@ chatsRouter.get("/me", JWTAuthMW,  async(req, res, next) => {
         .populate({path:"messages",  select:""})
         .populate({path : "messages.sender", select:"" })
         res.send({messages:reqMsg})
-    } catch (error) {
+    } catch (error) { 
+        console.log(error)
         next(createError(error))
     }
 })
@@ -116,7 +123,6 @@ chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
         const unreadMessages = []
 
       
-    console.log(unreadMessages)
         for( let i = 0;  i < reqChat.length; i++ ){
             for(let j = 0; j < reqChat[i].messages.length; j++){
                 
@@ -127,7 +133,8 @@ chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
         }
         
         res.send({messages:unreadMessages})
-    } catch (error) {
+    } catch (error) { 
+        console.log(error)
         next(createError(error))
     }
 })
@@ -141,9 +148,11 @@ chatsRouter.get("/:chatId", JWTAuthMW,  async(req, res, next) => {
         if(reqMsg){
             res.send({messages:reqMsg})
         } else{
+            console.log(`chat with ${req.params.chatId} not found`)
             next(createError(404,{message:`chat with ${req.params.chatId} not found`}))
         }
-    } catch (error) {
+    } catch (error) { 
+        console.log(error)
         next(createError(error))
     }
 })

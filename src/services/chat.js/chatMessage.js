@@ -14,9 +14,12 @@ chatMessagesRouter.get("/:chatMessageId", JWTAuthMW, async (req, res, next) => {
                 const chatMessage = await ChatMessageModel.findById(req.params.chatMessageId)
                 res.send({message: chatMessage});
             }else{
+        console.log("Not authorised to update the message")
+
             next(createError(404, {message:"Not authorised to update the message"}))
         }
     } catch (error) {
+        console.log(error)
         next(createError(error));
     }
     })
@@ -29,9 +32,13 @@ try {
             const savedMessage = await ChatMessageModel.findByIdAndUpdate(req.params.chatMessageId,req.body,{new:true})
             res.send({message: savedMessage});
         }else{
+        console.log("Not authorised to update the message")
+
         next(createError(404, {message:"Not authorised to update the message"}))
     }
 } catch (error) {
+    console.log(error)
+
     next(createError(error));
 }
 })
@@ -44,9 +51,13 @@ chatMessagesRouter.delete("/:chatMessageId", JWTAuthMW, async (req, res, next) =
                 const savedMessage = await ChatMessageModel.findByIdAndDelete(req.params.chatMessageId)
                 res.status().send();
             }else{
+        console.log("Not authorised to update the message")
+
             next(createError(404, {message:"Not authorised to update the message"}))
         }
     } catch (error) {
+        console.log(error)
+
         next(createError(error));
     }
     })
