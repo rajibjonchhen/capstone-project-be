@@ -119,18 +119,18 @@ chatsRouter.get("/me", JWTAuthMW,  async(req, res, next) => {
 //***************** get unread chat Messages ******************/ 
 chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
     try {
-        const reqChat = await ChatModel.find({members: req.user._id})
+        const reqChat = await ChatModel.find({members: req.user?._id})
          .populate({path : "members", select:""})
         .populate({path : "messages",  select:""})
         .populate({path : "messages", populate:{path:"sender", select:"_id name surname avatar email"} })
         
         const unreadMessages = []
 
+    
       
         for( let i = 0;  i < reqChat.length; i++ ){
             for(let j = 0; j < reqChat[i].messages.length; j++){
-                
-                if(reqChat[i].messages[j].markedAsRead === false && reqChat[i].messages[j].sender._id.toString() !== req.user._id.toString() ){
+                if(reqChat[i].messages[j].markedAsRead === false && reqChat[i].messages[j].sender?._id.toString() !== req.user?._id.toString() ){
                     unreadMessages.push(reqChat[i].messages[j])
                 }
             }
@@ -140,7 +140,7 @@ chatsRouter.get("/me/unreadMsg", JWTAuthMW,  async(req, res, next) => {
         
         res.send({messages:sortedMessage})
     } catch (error) { 
-        console.log(error)
+        console.log("error at /me/unreadMsg", error)
         next(createError(error))
     }
 })
